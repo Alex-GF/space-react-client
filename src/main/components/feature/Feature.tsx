@@ -1,5 +1,4 @@
 import React, { ReactElement, useEffect, useMemo, useState } from 'react';
-import { useSpaceClient } from '@/hooks/useSpaceClient';
 import { usePricingToken } from '@/hooks/usePricingToken';
 
 interface FeatureProps {
@@ -14,7 +13,6 @@ function getChildByType(children: React.ReactNode, typeName: string): ReactEleme
 }
 
 export const Feature: React.FC<FeatureProps> = ({ id, children }) => {
-  const client = useSpaceClient();
   const tokenService = usePricingToken();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [result, setResult] = useState<boolean | null>(null);
