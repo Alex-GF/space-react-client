@@ -1,5 +1,5 @@
 import { TinyEmitter } from 'tiny-emitter';
-import type { SpaceEvents, SpaceConfiguration, EventMessage } from '@/main/types';
+import type { SpaceEvents, SpaceConfiguration, EventMessage } from '@/types';
 import axios, { AxiosInstance } from 'axios';
 
 /**
@@ -13,6 +13,7 @@ export class SpaceClient {
   private axios: AxiosInstance
   private emitter: any;
   private ws?: WebSocket;
+  private userId: string | null = null;
 
   constructor(config: SpaceConfiguration) {
     this.httpUrl = config.url.endsWith('/') ? config.url.slice(0, -1) + '/api/v1' : config.url + '/api/v1';
@@ -81,18 +82,41 @@ export class SpaceClient {
   }
 
   /**
+   * Sets the user ID for the client and loads the pricing token for that user.
+   * @param userId The user ID to set for the client.
+   * @returns A promise that resolves when the user ID is set and the pricing token is generated.
+   * @throws Will throw an error if the user ID is not a non-empty string.
+   * @example
+   * ```typescript
+   * await spaceClient.setUserId('user123');
+   * ```
+   */
+  async setUserId(userId: string): Promise<void> {
+    if (typeof userId !== 'string' || userId.trim() === '') {
+      throw new Error('User ID must be a non-empty string.');
+    }
+    this.userId = userId;
+    await this.generateUserPricingToken();
+  }
+
+  /**
    * Performs a request to SPACE to retrieve a new pricing token for the user with the given userId.
    * @param userId The user ID for which to evaluate the feature.
    * @returns A promise that resolves to the pricing token.
    * @throws Will throw an error if the request fails.
    */
-  async generateUserPricingToken(userId: string): Promise<string> {
-    return this.axios.post(`/features/${userId}`)
+  async generateUserPricingToken(): Promise<string> {
+
+    if (!this.userId) {
+      throw new Error('User ID is not set. Please set the user ID with `setUserId(userId)` before trying to generate a pricing token.');
+    }
+
+    return this.axios.post(`/features/${this.userId}`)
       .then(response => {
         return response.data.pricingToken;
       })
       .catch(error => {
-        console.error(`Error generating pricing token for user ${userId}:`, error);
+        console.error(`Error generating pricing token for user ${this.userId}:`, error);
         throw error;
       });
   }

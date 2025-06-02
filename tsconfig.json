@@ -9,7 +9,7 @@
     "declarationDir": "dist",
     "outDir": "dist",
     "rootDir": "src",
-    "baseUrl": "src",
+    "baseUrl": "src/main",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "strict": true,

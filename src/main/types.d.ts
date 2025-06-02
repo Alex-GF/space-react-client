@@ -1,3 +1,6 @@
+import { SpaceClient } from '@/clients/SpaceClient';
+import { TokenService } from '@/services/token';
+
 export type SpaceEvents =
   | 'synchronized'
   | 'pricing_created'
@@ -9,6 +12,11 @@ export type SpaceEvents =
 export interface SpaceConfiguration {
   url: string;
   apiKey: string;
+}
+
+export interface SpaceClientContext{
+  client: SpaceClient;
+  tokenService: TokenService;
 }
 
 export * from './types/Events';
