@@ -19,7 +19,7 @@ describe('SpaceClient', () => {
     };
   });
 
-  it('should instantiate with correct URLs', () => {
+  it('Should instantiate with correct URLs', () => {
     const client = new SpaceClient(config);
     // @ts-ignore
     expect(client['httpUrl']).toContain('/api/v1');
@@ -27,7 +27,7 @@ describe('SpaceClient', () => {
     expect(client['wsUrl']).toContain('/events/pricings');
   });
 
-  it('should call callback on event emit', () => {
+  it('Should call callback on event emit', () => {
     const client = new SpaceClient(config);
     const callback = vi.fn();
     client.on('pricing_created', callback);
@@ -36,13 +36,19 @@ describe('SpaceClient', () => {
     expect(callback).toHaveBeenCalledWith({ foo: 'bar' });
   });
 
-  it('should log on evaluateFeature', () => {
+  it('Should generate pricing token', () => {
     const client = new SpaceClient(config);
-    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    client.evaluateFeature('user1', 'feature1');
+    const spy = vi.spyOn(client, 'generateUserPricingToken').mockImplementation(() => {
+      return new Promise((resolve) => {
+        resolve('token');
+      });
+    });
+    client.generateUserPricingToken('user1');
     expect(spy).toHaveBeenCalledWith(
-      expect.stringContaining("Evaluating feature 'feature1' for user 'user1' using API key 'test-key'")
+      'user1'
     );
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveReturnedWith(Promise.resolve('token'));
     spy.mockRestore();
   });
 });

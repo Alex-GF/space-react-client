@@ -10,3 +10,5 @@ export interface SpaceConfiguration {
   url: string;
   apiKey: string;
 }
+
+export * from './types/Events';

@@ -1,5 +1,6 @@
 import { TinyEmitter } from 'tiny-emitter';
-import type { SpaceEvents, SpaceConfiguration } from '@/main/types';
+import type { SpaceEvents, SpaceConfiguration, EventMessage } from '@/main/types';
+import axios, { AxiosInstance } from 'axios';
 
 /**
  * SpaceClient handles API and WebSocket communication with SPACE.
@@ -9,6 +10,7 @@ export class SpaceClient {
   private httpUrl: string;
   private wsUrl: string;
   private apiKey: string;
+  private axios: AxiosInstance
   private emitter: any;
   private ws?: WebSocket;
 
@@ -17,6 +19,15 @@ export class SpaceClient {
     this.wsUrl = config.url.replace(/^http/, 'ws') + '/events/pricings';
     this.apiKey = config.apiKey;
     this.emitter = new TinyEmitter();
+
+    this.axios = axios.create({
+      baseURL: this.httpUrl,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': `${this.apiKey}`,
+      }
+    })
+
     this.connectWebSocket();
   }
 
@@ -25,11 +36,14 @@ export class SpaceClient {
    */
   private connectWebSocket() {
     this.ws = new WebSocket(this.wsUrl);
+    this.ws.onopen = () => {
+      this.emitter.emit('synchronized', 'WebSocket connection established');
+    }
     this.ws.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data);
-        if (data && data.event && data.payload) {
-          this.emitter.emit(data.event, data.payload);
+        const data: EventMessage = JSON.parse(event.data);
+        if (data && data.code && data.details) {
+          this.emitter.emit(data.code.toLowerCase(), data.details);
         }
       } catch (err) {
         this.emitter.emit('error', err);
@@ -41,18 +55,45 @@ export class SpaceClient {
   }
 
   /**
-   * Subscribe to SPACE events.
+   * Listen to SPACE and connection events.
+   * @param event The event key to listen for.
+   * @param callback The callback function to execute when the event is emitted.
+   * @example
+   * ```typescript
+   * spaceClient.on('pricing_created', (data) => {
+   *   console.log('Pricing created:', data);
+   * });
+   * ```
+   * @throws Will throw an error if the event is not recognized.
+   * @throws Will throw an error if the callback is not a function.
    */
   on(event: SpaceEvents, callback: (data: any) => void) {
+
+    if (typeof callback !== 'function') {
+      throw new Error(`Callback for event '${event}' must be a function.`);
+    }
+
+    if (['synchronized', 'pricing_created', 'pricing_archived', 'pricing_actived', 'service_disabled', 'error'].indexOf(event) === -1) {
+      throw new Error(`Event '${event}' is not recognized.`);
+    }
+
     this.emitter.on(event, callback);
   }
 
   /**
-   * Example method for feature evaluation.
+   * Performs a request to SPACE to retrieve a new pricing token for the user with the given userId.
+   * @param userId The user ID for which to evaluate the feature.
+   * @returns A promise that resolves to the pricing token.
+   * @throws Will throw an error if the request fails.
    */
-  evaluateFeature(userId: string, featureId: string) {
-    // Example: Replace with real API call
-    // fetch(`${this.httpUrl}/features/evaluate`, ...)
-    console.log(`Evaluating feature '${featureId}' for user '${userId}' using API key '${this.apiKey}'`);
+  async generateUserPricingToken(userId: string): Promise<string> {
+    return this.axios.post(`/features/${userId}`)
+      .then(response => {
+        return response.data.pricingToken;
+      })
+      .catch(error => {
+        console.error(`Error generating pricing token for user ${userId}:`, error);
+        throw error;
+      });
   }
 }
