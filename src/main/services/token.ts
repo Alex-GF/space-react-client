@@ -1,5 +1,18 @@
 function parseJwt(token: string) {
-  return JSON.parse(decodeURIComponent(token.split(".")[1]));
+  return JSON.parse(decodeURIComponent(token.split('.')[1]));
+}
+
+/**
+ * Checks if the current pricing token is expired based on the 'exp' claim.
+ * @returns True if the token is expired or not set, false otherwise.
+ */
+function isTokenExpired(tokenPayload: Record<string, any>): boolean {
+  if (typeof tokenPayload.exp !== 'number') {
+    return true;
+  }
+  // 'exp' is in seconds since epoch
+  const now = Math.floor(Date.now() / 1000);
+  return now >= tokenPayload.exp;
 }
 
 export class TokenService {
@@ -12,6 +25,10 @@ export class TokenService {
    * @returns The stored pricing token payload.
    */
   getPricingToken() {
+    if (!this._validToken()) {
+      return null;
+    }
+
     return this.tokenPayload;
   }
 
@@ -21,14 +38,11 @@ export class TokenService {
    * @return The value of the key in the stored pricing token payload.
    */
   getFromToken(key: string) {
-    if (this.tokenPayload) {
-      return this.tokenPayload[key];
-    } else {
-      console.warn(
-        "Token payload is not set. Please call updateLocalPricingToken first."
-      );
+    if (!this._validToken()) {
       return null;
     }
+
+    return this.tokenPayload![key];
   }
 
   /**
@@ -42,17 +56,30 @@ export class TokenService {
   }
 
   evaluateFeature(featureId: string): boolean {
-    if (!this.tokenPayload) {
-      console.warn("Token payload is not set. Please call updateLocalPricingToken to configure a pricing token first.");
+    if (!this._validToken()) {
       return false;
     }
 
     // Check if the feature exists in the token payload
-    if (this.tokenPayload.features && this.tokenPayload.features[featureId]) {
-      return this.tokenPayload.features[featureId].eval;
+    if (this.tokenPayload!.features && this.tokenPayload!.features[featureId]) {
+      return this.tokenPayload!.features[featureId].eval;
     } else {
       console.warn(`Feature '${featureId}' not found in token payload.`);
       return false;
     }
+  }
+
+  private _validToken(): boolean {
+    if (!this.tokenPayload) {
+      console.warn('Token payload is not set. Please call updateLocalPricingToken first.');
+      return false;
+    }
+
+    if (isTokenExpired(this.tokenPayload)) {
+      console.warn('Pricing token is expired. Please update it the pricing token.');
+      return false;
+    }
+
+    return true;
   }
 }
