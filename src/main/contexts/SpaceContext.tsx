@@ -14,7 +14,14 @@ export const SpaceProvider: React.FC<{ config: SpaceConfiguration; children: Rea
   children,
 }) => {
   // Memoize the client to avoid unnecessary re-instantiation
-  const client = useMemo(() => new SpaceClientClass(config), [config.url, config.apiKey]);
+  const client = useMemo(() => {
+    if (config.allowConnectionWithSpace) {
+      return new SpaceClientClass(config)
+    }else{
+      return undefined;
+    }
+  }, [config.url, config.apiKey]);
+  
   const tokenService = new TokenService();
 
   return <SpaceContext.Provider value={{client, tokenService}}>{children}</SpaceContext.Provider>;

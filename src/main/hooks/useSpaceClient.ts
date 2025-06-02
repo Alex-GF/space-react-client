@@ -10,5 +10,15 @@ export function useSpaceClient() {
   if (!spaceContext) {
     throw new Error('useSpaceClient must be used within a SpaceProvider');
   }
-  return spaceContext.client;;
+
+  if (!spaceContext.client) {
+    throw new Error(
+      `SpaceClient is not initialized, so it cannot be instanciated. 
+      If you want to allow direct connection with the SPACE instance, 
+      ensure that you configuration has allowConnectionWithSpace = true, 
+      and url and apiKey provided.`,
+    );
+  }
+
+  return spaceContext.client;
 }

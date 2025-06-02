@@ -12,10 +12,11 @@ export type SpaceEvents =
 export interface SpaceConfiguration {
   url: string;
   apiKey: string;
+  allowConnectionWithSpace: boolean
 }
 
 export interface SpaceClientContext{
-  client: SpaceClient;
+  client?: SpaceClient;
   tokenService: TokenService;
 }
 

@@ -25,6 +25,12 @@ export const Feature: React.FC<FeatureProps> = ({ id, children }) => {
       console.error(`Invalid feature ID: ‘${id}’. A valid feature ID must contain a hyphen (’-’) and follow the format: ‘{serviceName in lowercase}-{featureName as defined in the pricing}’.`);
       return;
     }
+
+    if (tokenService.getPricingToken() === null){
+      console.error(`Pricing token is not set. Please ensure the token is initialized before using the Feature component.`);
+      return;
+    }
+
     setStatus('loading');
     setResult(null);
 
