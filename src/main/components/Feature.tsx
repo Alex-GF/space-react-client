@@ -1,4 +1,4 @@
-import { JSX, ReactElement, useEffect, useMemo, useState } from 'react';
+import { JSX, useEffect, useMemo, useState } from 'react';
 import { usePricingToken } from '@/hooks/usePricingToken';
 import React from 'react';
 
@@ -7,10 +7,30 @@ interface FeatureProps {
   children: React.ReactNode;
 }
 
-// Helper to get a child by type name
-function getChildByType(children: React.ReactNode, typeName: string): ReactElement | null {
-  const arr = React.Children.toArray(children) as ReactElement[];
-  return arr.find(child => child.type && (child.type as any).name === typeName) || null;
+// Generic wrapper for feature children
+export function On({ children }: { children: React.ReactNode }): JSX.Element {
+  return <>{children}</>;
+}
+
+export function Default({ children }: { children: React.ReactNode }): JSX.Element {
+  return <>{children}</>;
+}
+export function Loading({ children }: { children: React.ReactNode }): JSX.Element {
+  return <>{children}</>;
+}
+export function ErrorFallback({ children }: { children: React.ReactNode }): JSX.Element {
+  return <>{children}</>;
+}
+
+// Helper to get the children of a specific subcomponent type
+function getChildrenOfType(children: React.ReactNode, type: React.ElementType): React.ReactNode {
+  const match = React.Children.toArray(children).find(
+    (child) => React.isValidElement(child) && child.type === type
+  ) as React.ReactElement<any, any> | undefined;
+
+  console.log(match);
+
+  return match ? match.props.children : null;
 }
 
 export const Feature = ({ id, children }: FeatureProps): JSX.Element => {
@@ -23,22 +43,16 @@ export const Feature = ({ id, children }: FeatureProps): JSX.Element => {
 
   useEffect(() => {
     if (!isValidId) {
-      console.error(`Invalid feature ID: ‘${id}’. A valid feature ID must contain a hyphen (’-’) and follow the format: ‘{serviceName in lowercase}-{featureName as defined in the pricing}’.`);
       setStatus('error');
       return;
     }
-
-    if (tokenService.getPricingToken() === null){
-      console.error(`Pricing token is either not set or expired. Please ensure the token is initialized and not expired before using the Feature component.`);
+    if (tokenService.getPricingToken() === null) {
       setStatus('error');
       return;
     }
-
     setStatus('loading');
     setResult(null);
-
     const evaluationResult = tokenService.evaluateFeature(id);
-
     if (evaluationResult === null || evaluationResult === undefined) {
       setStatus('error');
     } else {
@@ -48,16 +62,16 @@ export const Feature = ({ id, children }: FeatureProps): JSX.Element => {
   }, [id, isValidId]);
 
   if (status === 'loading') {
-    return getChildByType(children, 'Loading') || <></>;
+    return <>{getChildrenOfType(children, Loading)}</>;
   }
   if (status === 'error') {
-    return getChildByType(children, 'ErrorFallback') || <></>;
+    return <>{getChildrenOfType(children, ErrorFallback)}</>;
   }
   if (status === 'success' && result === true) {
-    return getChildByType(children, 'On') || <></>;
+    return <>{getChildrenOfType(children, On)}</>;
   }
   if (status === 'success' && result === false) {
-    return getChildByType(children, 'Default') || <></>;
+    return <>{getChildrenOfType(children, Default)}</>;
   }
   return <></>;
 };

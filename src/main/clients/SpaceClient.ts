@@ -115,7 +115,10 @@ export class SpaceClient {
       throw new Error('User ID must be a non-empty string.');
     }
     this.userId = userId;
-    this.tokenService.updatePricingToken(await this.generateUserPricingToken());
+
+    const userPricingToken = await this.generateUserPricingToken();
+
+    this.tokenService.updatePricingToken(userPricingToken);
   }
 
   /**
@@ -132,7 +135,7 @@ export class SpaceClient {
     }
 
     return this.axios
-      .post(`/features/${this.userId}`)
+      .post(`/features/${this.userId}/pricing-token`)
       .then((response) => {
         return response.data.pricingToken;
       })
