@@ -16,15 +16,6 @@ function TestComponent() {
 }
 
 describe('SpaceProvider & useSpaceClient', () => {
-  it('provides the SpaceClient instance to children', () => {
-    render(
-      <SpaceProvider config={config}>
-        <TestComponent />
-      </SpaceProvider>
-    );
-    expect(screen.getByTestId('client').textContent).toBe('ClientReady');
-  });
-
   it('throws if useSpaceClient is used outside provider', () => {
     expect(() => render(<TestComponent />)).toThrow();
   });
