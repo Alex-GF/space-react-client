@@ -6,9 +6,9 @@ import { SpaceContext } from '../contexts/SpaceContext';
  * Throws an error if used outside of SpaceProvider.
  */
 export function usePricingToken() {
-  const spaceClient = useContext(SpaceContext);
-  if (!spaceClient) {
-    throw new Error('useSpaceClient must be used within a SpaceProvider');
+  const spaceContext = useContext(SpaceContext);
+  if (!spaceContext) {
+    throw new Error('usePricingToken must be used within a SpaceProvider');
   }
-  return spaceClient.tokenService;
+  return spaceContext.tokenService;
 }
