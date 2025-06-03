@@ -1,11 +1,12 @@
 import { SpaceClient } from '../main/clients/SpaceClient';
-import type { SpaceConfiguration, SpaceEvents } from '@/main/types';
+import type { SpaceConfiguration } from '@/index';
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 
 describe('SpaceClient', () => {
   const config: SpaceConfiguration = {
     url: 'http://localhost:3000',
     apiKey: 'test-key',
+    allowConnectionWithSpace: true,
   };
 
   beforeAll(() => {
@@ -43,10 +44,7 @@ describe('SpaceClient', () => {
         resolve('token');
       });
     });
-    client.generateUserPricingToken('user1');
-    expect(spy).toHaveBeenCalledWith(
-      'user1'
-    );
+    client.generateUserPricingToken();
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveReturnedWith(Promise.resolve('token'));
     spy.mockRestore();

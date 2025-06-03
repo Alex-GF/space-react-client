@@ -18,8 +18,6 @@ function isTokenExpired(tokenPayload: Record<string, any>): boolean {
 export class TokenService {
   private tokenPayload: Record<string, any> | null = null;
 
-  constructor() {}
-
   /**
    * Retrieves the stored pricing token's payload.
    * @returns The stored pricing token payload.

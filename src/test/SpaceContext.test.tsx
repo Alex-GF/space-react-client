@@ -2,11 +2,12 @@ import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { SpaceProvider } from '../main/contexts/SpaceContext';
 import { useSpaceClient } from '../main/hooks/useSpaceClient';
-import type { SpaceConfiguration } from '@/main/types';
+import type { SpaceConfiguration } from '@/index';
 
 const config: SpaceConfiguration = {
   url: 'http://localhost:3000',
   apiKey: 'test-key',
+  allowConnectionWithSpace: true,
 };
 
 function TestComponent() {

@@ -5,18 +5,16 @@
     "lib": ["DOM", "ES2020"],
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
-    "declaration": true,
-    "declarationDir": "dist",
     "outDir": "dist",
-    "rootDir": "src",
-    "baseUrl": "src/main",
+    "rootDir": "src/main",
+    "baseUrl": ".",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "strict": true,
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["src/main/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src/main/index.ts"],
   "exclude": ["node_modules", "dist"]
 }

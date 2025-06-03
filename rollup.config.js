@@ -1,16 +1,28 @@
+import alias from '@rollup/plugin-alias';
 import typescript from '@rollup/plugin-typescript';
 import dts from 'rollup-plugin-dts';
+import { resolve } from 'path';
 
 export default [
   {
-    input: 'src/index.ts',
+    input: 'src/main/index.ts',
     output: [{ file: 'dist/index.js', format: 'esm' }],
     external: ['react', 'react-dom'],
-    plugins: [typescript({ tsconfig: './tsconfig.json' })]
+    plugins: [
+      alias({
+        entries: [{ find: '@', replacement: resolve(process.cwd(), 'src/main') }],
+      }),
+      typescript({ tsconfig: './tsconfig.json' }),
+    ],
   },
   {
-    input: 'dist/types.d.ts',
+    input: 'src/main/types.d.ts',
     output: [{ file: 'dist/index.d.ts', format: 'es' }],
-    plugins: [dts()],
-  }
+    plugins: [
+      alias({
+        entries: [{ find: '@', replacement: resolve(process.cwd(), 'src/main') }],
+      }),
+      dts(),
+    ],
+  },
 ];
