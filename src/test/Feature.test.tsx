@@ -1,33 +1,19 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { render } from '@testing-library/react';
-import { Feature } from '@/components/Feature';
+import { Default, ErrorFallback, Feature, Loading, On } from '@/components/Feature';
 import { TokenService } from '@/services/token';
 import { updateJwtExp, TEST_TOKEN } from './utils/token/helpers';
 import { SpaceContext } from '@/contexts/SpaceContext';
-
-// Dummy children components for testing
-function On() {
-  return <div>ON</div>;
-}
-function Default() {
-  return <div>DEFAULT</div>;
-}
-function Loading() {
-  return <div>LOADING</div>;
-}
-function ErrorFallback() {
-  return <div>ERROR</div>;
-}
 
 // Helper to render Feature with context
 function renderWithProvider(tokenService: TokenService, featureId: string) {
   return render(
     <SpaceContext.Provider value={{ client: undefined, tokenService }}>
       <Feature id={featureId}>
-        <On />
-        <Default />
-        <Loading />
-        <ErrorFallback />
+        <On>ON</On>
+        <Default>DEFAULT</Default>
+        <Loading>LOADING</Loading>
+        <ErrorFallback>ERROR</ErrorFallback>
       </Feature>
     </SpaceContext.Provider>,
   );
