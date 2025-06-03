@@ -56,3 +56,8 @@ export function updateJwtExp(token: string, secondsAhead: number): string {
   const newPayload = btoa(JSON.stringify(payload));
   return `${parts[0]}.${newPayload}.${parts[2]}`;
 }
+
+// Helper to create a fake JWT
+export function createFakeJwt(payload: Record<string, number | object | string>) {    
+  return `header.${btoa(JSON.stringify(payload))}.signature`;
+}
