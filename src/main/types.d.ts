@@ -1,5 +1,5 @@
-import type { SpaceClient } from '@/clients/SpaceClient';
-import type { TokenService } from '@/services/token';
+export type { SpaceClient } from '@/clients/SpaceClient';
+export type { TokenService } from '@/services/token';
 
 export type SpaceEvents =
   | 'synchronized'
