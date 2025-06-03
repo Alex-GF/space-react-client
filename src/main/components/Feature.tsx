@@ -23,11 +23,13 @@ export const Feature: React.FC<FeatureProps> = ({ id, children }) => {
   useEffect(() => {
     if (!isValidId) {
       console.error(`Invalid feature ID: ‘${id}’. A valid feature ID must contain a hyphen (’-’) and follow the format: ‘{serviceName in lowercase}-{featureName as defined in the pricing}’.`);
+      setStatus('error');
       return;
     }
 
     if (tokenService.getPricingToken() === null){
-      console.error(`Pricing token is not set. Please ensure the token is initialized before using the Feature component.`);
+      console.error(`Pricing token is either not set or expired. Please ensure the token is initialized and not expired before using the Feature component.`);
+      setStatus('error');
       return;
     }
 
@@ -38,7 +40,6 @@ export const Feature: React.FC<FeatureProps> = ({ id, children }) => {
 
     if (evaluationResult === null || evaluationResult === undefined) {
       setStatus('error');
-      console.error(`Feature evaluation failed for ID: ‘${id}’.`);
     } else {
       setResult(evaluationResult);
       setStatus('success');

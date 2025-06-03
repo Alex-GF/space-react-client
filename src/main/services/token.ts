@@ -1,5 +1,5 @@
 function parseJwt(token: string) {
-  return JSON.parse(decodeURIComponent(token.split('.')[1]));
+  return JSON.parse(atob(token.split('.')[1]));
 }
 
 /**
@@ -53,17 +53,17 @@ export class TokenService {
     this.tokenPayload = parsedToken;
   }
 
-  evaluateFeature(featureId: string): boolean {
+  evaluateFeature(featureId: string): boolean | null {
     if (!this._validToken()) {
       return false;
     }
 
     // Check if the feature exists in the token payload
-    if (this.tokenPayload!.features && this.tokenPayload!.features[featureId]) {
+    if (this.tokenPayload?.features?.[featureId]) {
       return this.tokenPayload!.features[featureId].eval;
     } else {
       console.warn(`Feature '${featureId}' not found in token payload.`);
-      return false;
+      return null;
     }
   }
 
