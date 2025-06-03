@@ -28,8 +28,6 @@ function getChildrenOfType(children: React.ReactNode, type: React.ElementType): 
     (child) => React.isValidElement(child) && child.type === type
   ) as React.ReactElement<any, any> | undefined;
 
-  console.log(match);
-
   return match ? match.props.children : null;
 }
 
