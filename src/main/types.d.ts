@@ -1,5 +1,7 @@
-export type { SpaceClient } from '@/clients/SpaceClient';
-export type { TokenService } from '@/services/token';
+import React from 'react';
+
+export type { SpaceClient } from './clients/SpaceClient';
+export type { TokenService } from './services/token';
 
 export type SpaceEvents =
   | 'synchronized'
@@ -20,4 +22,4 @@ export interface SpaceClientContext{
   tokenService: TokenService;
 }
 
-export * from './types/Events';
+export type * from './types/Events';

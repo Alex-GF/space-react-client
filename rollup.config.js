@@ -6,7 +6,7 @@ import { resolve } from 'path';
 export default [
   {
     input: 'src/main/index.ts',
-    output: [{ file: 'dist/index.js', format: 'esm' }],
+    output: [{ file: 'dist/index.js', format: 'es' }],
     external: ['react', 'react-dom'],
     plugins: [
       alias({
@@ -16,7 +16,7 @@ export default [
     ],
   },
   {
-    input: 'src/main/types.d.ts',
+    input: 'src/main/index.ts',
     output: [{ file: 'dist/index.d.ts', format: 'es' }],
     plugins: [
       alias({

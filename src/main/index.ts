@@ -1,8 +1,8 @@
-export { SpaceProvider } from '@/contexts/SpaceContext';
+export { SpaceProvider } from './contexts/SpaceContext';
 
-export { useSpaceClient } from '@/hooks/useSpaceClient';
-export { usePricingToken } from '@/hooks/usePricingToken';
+export { useSpaceClient } from './hooks/useSpaceClient';
+export { usePricingToken } from './hooks/usePricingToken';
 
-export { Feature } from '@/components/Feature';
+export { Feature } from './components/Feature';
 
-export type * from '@/types';
+export type * from './types';
