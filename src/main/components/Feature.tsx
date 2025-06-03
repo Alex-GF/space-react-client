@@ -1,5 +1,6 @@
-import React, { ReactElement, useEffect, useMemo, useState } from 'react';
+import { JSX, ReactElement, useEffect, useMemo, useState } from 'react';
 import { usePricingToken } from '@/hooks/usePricingToken';
+import React from 'react';
 
 interface FeatureProps {
   id: string;
@@ -12,7 +13,7 @@ function getChildByType(children: React.ReactNode, typeName: string): ReactEleme
   return arr.find(child => child.type && (child.type as any).name === typeName) || null;
 }
 
-export const Feature: React.FC<FeatureProps> = ({ id, children }) => {
+export const Feature = ({ id, children }: FeatureProps): JSX.Element => {
   const tokenService = usePricingToken();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [result, setResult] = useState<boolean | null>(null);

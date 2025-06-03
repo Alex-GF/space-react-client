@@ -2,6 +2,7 @@ import { TinyEmitter } from 'tiny-emitter';
 import type { SpaceEvents, SpaceConfiguration, EventMessage } from '@/types';
 import axios, { AxiosInstance } from 'axios';
 import { TokenService } from '@/services/token';
+import { io, Socket } from 'socket.io-client';
 
 /**
  * SpaceClient handles API and WebSocket communication with SPACE.
@@ -10,11 +11,15 @@ import { TokenService } from '@/services/token';
 export class SpaceClient {
   private readonly httpUrl: string;
   private readonly wsUrl: string;
+  private readonly socketClient: Socket;
+  /**
+   * The WebSocket namespace specifically for pricing-related events.
+   */
+  private readonly pricingSocketNamespace: Socket; 
   private readonly apiKey: string;
   private readonly axios: AxiosInstance;
   private readonly emitter: any;
   public readonly tokenService: TokenService;
-  private ws?: WebSocket;
   private userId: string | null = null;
 
   constructor(config: SpaceConfiguration) {
@@ -22,6 +27,10 @@ export class SpaceClient {
       ? config.url.slice(0, -1) + '/api/v1'
       : config.url + '/api/v1';
     this.wsUrl = config.url.replace(/^http/, 'ws') + '/events/pricings';
+    this.socketClient = io(this.wsUrl, {
+      path: '/events',
+    })
+    this.pricingSocketNamespace = this.socketClient.io.socket('/pricings');
     this.apiKey = config.apiKey;
     this.emitter = new TinyEmitter();
     this.tokenService = new TokenService();
@@ -41,23 +50,20 @@ export class SpaceClient {
    * Connects to the SPACE WebSocket and handles incoming events.
    */
   private connectWebSocket() {
-    this.ws = new WebSocket(this.wsUrl);
-    this.ws.onopen = () => {
+    
+    this.pricingSocketNamespace.on('connect', () => {
+      console.log('Connected to SPACE');
       this.emitter.emit('synchronized', 'WebSocket connection established');
-    };
-    this.ws.onmessage = (event) => {
-      try {
-        const data: EventMessage = JSON.parse(event.data);
-        if (data && data.code && data.details) {
-          this.emitter.emit(data.code.toLowerCase(), data.details);
-        }
-      } catch (err) {
-        this.emitter.emit('error', err);
-      }
-    };
-    this.ws.onerror = (err) => {
-      this.emitter.emit('error', err);
-    };
+    });
+
+    this.pricingSocketNamespace.on('message', data => {
+      const event = (data.code as SpaceEvents).toLowerCase();
+      this.emitter.emit(event, data.details);
+    });
+
+    this.pricingSocketNamespace.on('connect_error', error => {
+      this.emitter.emit('error', error);
+    });
   }
 
   /**
