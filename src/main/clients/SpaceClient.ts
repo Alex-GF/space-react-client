@@ -1,5 +1,5 @@
 import { TinyEmitter } from 'tiny-emitter';
-import type { SpaceEvents, SpaceConfiguration, EventMessage } from '@/types';
+import type { SpaceEvents, SpaceConfiguration } from '@/types';
 import axios, { AxiosInstance } from 'axios';
 import { TokenService } from '@/services/token';
 import { io, Socket } from 'socket.io-client';
@@ -29,7 +29,7 @@ export class SpaceClient {
     this.wsUrl = config.url.replace(/^http/, 'ws') + '/events/pricings';
     this.socketClient = io(this.wsUrl, {
       path: '/events',
-    })
+    });
     this.pricingSocketNamespace = this.socketClient.io.socket('/pricings');
     this.apiKey = config.apiKey;
     this.emitter = new TinyEmitter();
@@ -46,22 +46,29 @@ export class SpaceClient {
     this.connectWebSocket();
   }
 
+  disconnectWebSocket() {
+    if (this.pricingSocketNamespace.connected) {
+      this.pricingSocketNamespace.disconnect();
+      this.emitter.off(); // Remove all listeners
+    }
+  }
+
   /**
    * Connects to the SPACE WebSocket and handles incoming events.
    */
-  private connectWebSocket() {
+  connectWebSocket() {
     
     this.pricingSocketNamespace.on('connect', () => {
       console.log('Connected to SPACE');
       this.emitter.emit('synchronized', 'WebSocket connection established');
     });
 
-    this.pricingSocketNamespace.on('message', data => {
+    this.pricingSocketNamespace.on('message', (data: any) => {
       const event = (data.code as SpaceEvents).toLowerCase();
       this.emitter.emit(event, data.details);
     });
 
-    this.pricingSocketNamespace.on('connect_error', error => {
+    this.pricingSocketNamespace.on('connect_error', (error: any) => {
       this.emitter.emit('error', error);
     });
   }
