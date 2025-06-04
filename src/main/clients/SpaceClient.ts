@@ -15,7 +15,7 @@ export class SpaceClient {
   /**
    * The WebSocket namespace specifically for pricing-related events.
    */
-  private readonly pricingSocketNamespace: Socket; 
+  private readonly pricingSocketNamespace: Socket;
   private readonly apiKey: string;
   private readonly axios: AxiosInstance;
   private readonly emitter: any;
@@ -57,7 +57,6 @@ export class SpaceClient {
    * Connects to the SPACE WebSocket and handles incoming events.
    */
   connectWebSocket() {
-    
     this.pricingSocketNamespace.on('connect', () => {
       console.log('Connected to SPACE');
       this.emitter.emit('synchronized', 'WebSocket connection established');
@@ -105,6 +104,21 @@ export class SpaceClient {
     }
 
     this.emitter.on(event, callback);
+  }
+
+  /**
+   * Removes event listeners.
+   * @param event (optional) The event to remove listeners for. If omitted, removes all listeners.
+   * @param callback (optional) The specific callback to remove.
+   */
+  public off(event?: SpaceEvents, callback?: (data: any) => void) {
+    if (event && callback) {
+      this.emitter.off(event, callback);
+    } else if (event) {
+      this.emitter.off(event);
+    } else {
+      this.emitter.off();
+    }
   }
 
   /**
