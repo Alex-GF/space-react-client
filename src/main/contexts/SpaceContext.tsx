@@ -1,4 +1,4 @@
-import React, { createContext, JSX, useMemo } from "react";
+import React, { createContext, JSX, useEffect, useMemo } from "react";
 import { SpaceClientContext, SpaceConfiguration } from "@/types";
 import { SpaceClient as SpaceClientClass } from "../clients/SpaceClient";
 import { TokenService } from "@/services/token";
@@ -31,6 +31,14 @@ export const SpaceProvider = ({
       tokenService: tokenService,
     };
   }, [config.url, config.apiKey]);
+
+  useEffect(() => {
+    return () => {
+      if (context.client && typeof context.client.disconnectWebSocket === 'function') {
+        context.client.disconnectWebSocket();
+      }
+    };
+  }, [context.client]);
 
   return <SpaceContext.Provider value={context}>{children}</SpaceContext.Provider>;
 };
