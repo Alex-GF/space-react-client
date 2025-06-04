@@ -16,7 +16,9 @@ export const SpaceProvider = ({
   // Memorize the client to avoid unnecessary re-instantiation
   const context = useMemo(() => {
 
-    const client = config.allowConnectionWithSpace ? new SpaceClientClass(config) : undefined;
+    const denyConnectionWithSpace: boolean = config.allowConnectionWithSpace === false;
+
+    const client = denyConnectionWithSpace ? undefined : new SpaceClientClass(config);
     let tokenService: TokenService | undefined;
     if (!client) {
       tokenService = new TokenService();
