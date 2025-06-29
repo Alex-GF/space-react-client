@@ -29,6 +29,7 @@ export class SpaceClient {
     this.wsUrl = config.url.replace(/^http/, 'ws') + '/events/pricings';
     this.socketClient = io(this.wsUrl, {
       path: '/events',
+      transports: ['websocket'],
     });
     this.pricingSocketNamespace = this.socketClient.io.socket('/pricings');
     this.apiKey = config.apiKey;
