@@ -9,9 +9,8 @@ With this SDK you can:
 - 🧩 **Activate/deactivate UI components** declaratively with the `<Feature>` component.
 - 🔔 **Subscribe to SPACE pricing events** to keep your UI in sync.  
 
-:::warning important 
-This SDK is intended for research and experimentation. For production usage, see **[License & Disclaimer](#-license--disclaimer)**.
-:::
+> [!WARNING]
+> This SDK is intended for research and experimentation. For production usage, see **[License & Disclaimer](#-license--disclaimer)**.
 
 ---
 
@@ -68,10 +67,9 @@ createRoot(document.getElementById('root')!)
   );
 ```
 
-:::warning  
-Setting `allowConnectionWithSpace: false` disables all connections to SPACE.  
-This means you can still evaluate features from a token, but **event listeners (e.g., pricing_created, pricing_archived, etc.) as well as methods like `setUserId` and `generateUserPricingToken` will not work.**  
-:::
+> [!WARNING]
+> Setting `allowConnectionWithSpace: false` disables all connections to SPACE.  
+> This means you can still evaluate features from a token, but **event listeners (e.g., pricing_created, pricing_archived, etc.) as well as methods like `setUserId` and `generateUserPricingToken` will not work.** 
 
 ### 2. Identify the user and load a Pricing Token
 
@@ -191,10 +189,9 @@ export function InjectTokenFromServer() {
     - `<Loading>` — Rendered while evaluating.  
     - `<ErrorFallback>` — Rendered on errors (invalid id, expired token, etc).  
 
-:::warning
-The `feature-id` is a string in the format `saasName-featureName`, always in lowercase.
-For example, to reference the **pets feature from PetClinic**, the resulting feature-id would be: `petclinic-pets`.
-:::
+> [!WARNING]
+> The `feature-id` is a string in the format `saasName-featureName`, always in lowercase.
+> For example, to reference the **pets feature from PetClinic**, the resulting feature-id would be: `petclinic-pets`.
 
 ---
 
@@ -272,10 +269,9 @@ The project uses the following main tools and technologies:
 
 This project is licensed under the **MIT License**. See [LICENSE](https://github.com/Alex-GF/space-react-client/blob/main/LICENSE).  
 
-:::warning
-This SDK is part of **ongoing research** in pricing-driven devops.
-It is still in an early stage and not intended for production use.
-:::
+> [!WARNING]
+> This SDK is part of **ongoing research** in pricing-driven devops.
+> It is still in an early stage and not intended for production use.
 
 ---
 
