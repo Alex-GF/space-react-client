@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TokenService } from '@/services/token';
 import { createFakeJwt } from './utils/token/helpers';
 
@@ -65,5 +65,19 @@ describe('TokenService', () => {
     const token = createFakeJwt(validPayload);
     service.updatePricingToken(token);
     expect(service.evaluateFeature('non-existent')).toBe(null);
+  });
+
+  it('should notify subscribers on token update and allow unsubscribe', () => {
+    const listener = vi.fn();
+    const unsubscribe = service.subscribe(listener);
+    const token = createFakeJwt(validPayload);
+    service.updatePricingToken(token);
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    // After unsubscribe, no more notifications
+    unsubscribe();
+    const token2 = createFakeJwt({ ...validPayload, exp: Math.floor(Date.now() / 1000) + 120 });
+    service.updatePricingToken(token2);
+    expect(listener).toHaveBeenCalledTimes(1);
   });
 });

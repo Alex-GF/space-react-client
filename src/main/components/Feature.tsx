@@ -39,24 +39,38 @@ export const Feature = ({ id, children }: FeatureProps): JSX.Element => {
   const isValidId = useMemo(() => id.includes('-'), [id]);
 
   useEffect(() => {
-    if (!isValidId) {
-      setStatus('error');
-      return;
-    }
-    if (tokenService.getPricingToken() === null) {
-      setStatus('error');
-      return;
-    }
-    setStatus('loading');
-    setResult(null);
-    const evaluationResult = tokenService.evaluateFeature(id);
-    if (evaluationResult === null || evaluationResult === undefined) {
-      setStatus('error');
-    } else {
-      setResult(evaluationResult);
-      setStatus('success');
-    }
-  }, [id, isValidId, tokenService.tokenPayload]);
+    const evaluate = () => {
+      if (!isValidId) {
+        setStatus('error');
+        return;
+      }
+      if (tokenService.getPricingToken() === null) {
+        setStatus('error');
+        return;
+      }
+      setStatus('loading');
+      setResult(null);
+      const evaluationResult = tokenService.evaluateFeature(id);
+      if (evaluationResult === null || evaluationResult === undefined) {
+        setStatus('error');
+      } else {
+        setResult(evaluationResult);
+        setStatus('success');
+      }
+    };
+
+    // Initial evaluation
+    evaluate();
+
+    // Subscribe to token changes to re-evaluate
+    const unsubscribe = tokenService.subscribe(() => {
+      evaluate();
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [id, isValidId, tokenService]);
 
   if (status === 'loading') {
     return <>{getChildrenOfType(children, Loading)}</>;
