@@ -1,6 +1,5 @@
-import { JSX, useEffect, useMemo, useState } from 'react';
+import React, { JSX, useEffect, useMemo, useState } from 'react';
 import { usePricingToken } from '@/hooks/usePricingToken';
-import React from 'react';
 
 interface FeatureProps {
   id: string;
@@ -57,7 +56,7 @@ export const Feature = ({ id, children }: FeatureProps): JSX.Element => {
       setResult(evaluationResult);
       setStatus('success');
     }
-  }, [id, isValidId]);
+  }, [id, isValidId, tokenService.tokenPayload]);
 
   if (status === 'loading') {
     return <>{getChildrenOfType(children, Loading)}</>;
