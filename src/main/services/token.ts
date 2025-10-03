@@ -17,6 +17,7 @@ function isTokenExpired(tokenPayload: Record<string, any>): boolean {
 
 export class TokenService {
   private tokenPayload: Record<string, any> | null = null;
+  private listeners: Set<() => void> = new Set();
 
   /**
    * Retrieves the stored pricing token's payload.
@@ -51,6 +52,7 @@ export class TokenService {
     const parsedToken = parseJwt(token);
 
     this.tokenPayload = parsedToken;
+    this._notify();
   }
 
   evaluateFeature(featureId: string): boolean | null {
@@ -79,5 +81,26 @@ export class TokenService {
     }
 
     return true;
+  }
+
+  /**
+   * Subscribe to pricing token updates. Returns an unsubscribe function.
+   */
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  /** Notify all listeners that the token has changed. */
+  private _notify() {
+    this.listeners.forEach((l) => {
+      try {
+        l();
+      } catch (e) {
+        console.error(e);
+      }
+    });
   }
 }
