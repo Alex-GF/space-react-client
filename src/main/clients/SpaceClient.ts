@@ -19,7 +19,7 @@ export class SpaceClient {
   private readonly apiKey: string;
   private readonly axios: AxiosInstance;
   private readonly emitter: any;
-  public readonly tokenService: TokenService;
+  public readonly token: TokenService;
   private userId: string | null = null;
 
   constructor(config: SpaceConfiguration) {
@@ -34,7 +34,7 @@ export class SpaceClient {
     this.pricingSocketNamespace = this.socketClient.io.socket('/pricings');
     this.apiKey = config.apiKey;
     this.emitter = new TinyEmitter();
-    this.tokenService = new TokenService();
+    this.token = new TokenService();
 
     this.axios = axios.create({
       baseURL: this.httpUrl,
@@ -140,7 +140,7 @@ export class SpaceClient {
 
     const userPricingToken = await this.generateUserPricingToken();
 
-    this.tokenService.updatePricingToken(userPricingToken);
+    this.token.update(userPricingToken);
   }
 
   /**

@@ -134,15 +134,15 @@ You can then inject a Pricing Token from your backend:
 
 ```tsx
 import { useEffect } from 'react';
-import { usePricingToken } from 'space-react-client';
+import { useTokenService } from 'space-react-client';
 
 export function InjectTokenFromServer() {
-  const tokenService = usePricingToken();
+  const tokenService = useTokenService();
 
   useEffect(() => {
     fetch('/api/my-pricing-token')
       .then(res => res.text()) // token as string
-      .then(token => tokenService.updatePricingToken(token))
+      .then(token => tokenService.update(token))
       .catch(console.error);
   }, [tokenService]);
 
@@ -173,7 +173,7 @@ export function InjectTokenFromServer() {
 - **`useSpaceClient(): SpaceClient`**  
   Access the connected SPACE client. Throws if not available.  
 
-- **`usePricingToken(): TokenService`**  
+- **`useTokenService(): TokenService`**  
   Manage Pricing Tokens in context. Available even if live connection is disabled.  
 
 ---
@@ -230,8 +230,8 @@ All events (except `synchronized` and `error`) include the following object:
 
 **Methods:**
 
-- `updatePricingToken(token)` — Validates & stores a pricing token.  
-- `getPricingToken()` — Return parsed token payload.  
+- `update(token)` — Validates & stores a pricing token.  
+- `getPayload()` — Return parsed token payload.  
 - `evaluateFeature(featureId)` — Returns `true | false | null`.  
 
 Token expectations:  

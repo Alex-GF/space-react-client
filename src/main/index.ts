@@ -1,7 +1,8 @@
 export { SpaceProvider } from './contexts/SpaceContext';
 
 export { useSpaceClient } from './hooks/useSpaceClient';
-export { usePricingToken } from './hooks/usePricingToken';
+export { useTokenService } from './hooks/useTokenService';
+export { usePricingTokenPayload } from './hooks/usePricingTokenPayload';
 
 export { Feature, On, Default, Loading, ErrorFallback } from './components/Feature';
 

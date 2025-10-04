@@ -1,13 +1,14 @@
 {
   "name": "space-react-client",
   "type": "module",
-  "version": "0.2.5",
+  "version": "0.3.0",
   "description": "",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.js"
     }

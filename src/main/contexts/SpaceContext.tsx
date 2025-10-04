@@ -1,4 +1,4 @@
-import React, { createContext, JSX, useEffect, useMemo } from "react";
+import React, { createContext, useEffect, useMemo } from "react";
 import { SpaceClientContext, SpaceConfiguration } from "@/types";
 import { SpaceClient as SpaceClientClass } from "../clients/SpaceClient";
 import { TokenService } from "@/services/token";
@@ -12,7 +12,7 @@ export const SpaceContext = createContext<SpaceClientContext | undefined>(undefi
 export const SpaceProvider = ({
   config,
   children,
-}: { config: SpaceConfiguration, children: React.ReactNode }): JSX.Element => {
+}: { config: SpaceConfiguration, children: React.ReactNode }): React.JSX.Element => {
   // Memorize the client to avoid unnecessary re-instantiation
   const context = useMemo(() => {
 
@@ -23,7 +23,7 @@ export const SpaceProvider = ({
     if (!client) {
       tokenService = new TokenService();
     }else{
-      tokenService = client.tokenService;
+      tokenService = client.token;
     }
 
     return {

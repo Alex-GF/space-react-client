@@ -25,34 +25,34 @@ describe('TokenService', () => {
   });
 
   it('should return null if token is not set', () => {
-    expect(service.getPricingToken()).toBeNull();
+    expect(service.getPayload()).toBeNull();
   });
 
   it('should update and retrieve a valid token', () => {
     const token = createFakeJwt(validPayload);
-    service.updatePricingToken(token);
-    expect(service.getPricingToken()).toEqual(validPayload);
+    service.update(token);
+    expect(service.getPayload()).toEqual(validPayload);
   });
 
   it('should return null if token is expired', () => {
     const token = createFakeJwt(expiredPayload);
-    service.updatePricingToken(token);
-    expect(service.getPricingToken()).toBeNull();
+    service.update(token);
+    expect(service.getPayload()).toBeNull();
   });
 
   it('should retrieve a value from the token payload', () => {
     const token = createFakeJwt(validPayload);
-    service.updatePricingToken(token);
-    expect(service.getFromToken('custom')).toBe('value');
+    service.update(token);
+    expect(service.getKey('custom')).toBe('value');
   });
 
-  it('should return null for getFromToken if token is invalid', () => {
-    expect(service.getFromToken('custom')).toBeNull();
+  it('should return null for getKey if token is invalid', () => {
+    expect(service.getKey('custom')).toBeNull();
   });
 
   it('should evaluate features correctly', () => {
     const token = createFakeJwt(validPayload);
-    service.updatePricingToken(token);
+    service.update(token);
     expect(service.evaluateFeature('service-feature')).toBe(true);
     expect(service.evaluateFeature('other-feature')).toBe(false);
   });
@@ -63,7 +63,7 @@ describe('TokenService', () => {
 
   it('should return false and warn if feature is not found', () => {
     const token = createFakeJwt(validPayload);
-    service.updatePricingToken(token);
+    service.update(token);
     expect(service.evaluateFeature('non-existent')).toBe(null);
   });
 
@@ -71,13 +71,13 @@ describe('TokenService', () => {
     const listener = vi.fn();
     const unsubscribe = service.subscribe(listener);
     const token = createFakeJwt(validPayload);
-    service.updatePricingToken(token);
+    service.update(token);
     expect(listener).toHaveBeenCalledTimes(1);
 
     // After unsubscribe, no more notifications
     unsubscribe();
     const token2 = createFakeJwt({ ...validPayload, exp: Math.floor(Date.now() / 1000) + 120 });
-    service.updatePricingToken(token2);
+    service.update(token2);
     expect(listener).toHaveBeenCalledTimes(1);
   });
 });

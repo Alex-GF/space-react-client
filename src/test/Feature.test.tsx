@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import { Default, ErrorFallback, Feature, Loading, On } from '@/components/Feature';
 import { TokenService } from '@/services/token';
 import { updateJwtExp, TEST_TOKEN } from './utils/token/helpers';
@@ -24,7 +24,7 @@ describe('Feature component', () => {
 
   beforeAll(() => {
     tokenService = new TokenService();
-    tokenService.updatePricingToken(updateJwtExp(TEST_TOKEN, 20));
+    tokenService.update(updateJwtExp(TEST_TOKEN, 20));
   });
 
   it('Renders ON when feature with usage limit is enabled', () => {
@@ -55,7 +55,7 @@ describe('Feature component', () => {
 
   it('renders ErrorFallback when pricing token is expired', () => {
     const tokenServiceExpired = new TokenService();
-    tokenServiceExpired.updatePricingToken(TEST_TOKEN); // Set an expired token
+    tokenServiceExpired.update(TEST_TOKEN); // Set an expired token
     const { getByText } = renderWithProvider(tokenServiceExpired, 'zoom-automatedCaptions');
     expect(getByText('ERROR')).toBeDefined();
   });
@@ -63,7 +63,7 @@ describe('Feature component', () => {
   it('re-evaluates when tokenService updates token', async () => {
     const localService = new TokenService();
     // Start with disabled feature
-    localService.updatePricingToken(updateJwtExp(TEST_TOKEN, 20));
+    localService.update(updateJwtExp(TEST_TOKEN, 20));
     const { rerender } = render(
       <SpaceContext.Provider value={{ client: undefined, tokenService: localService }}>
         <Feature id="zoom-automatedCaptions">
@@ -85,9 +85,11 @@ describe('Feature component', () => {
     payload.exp = Math.floor(Date.now() / 1000) + 30;
     const newToken = `${parts[0]}.${btoa(JSON.stringify(payload))}.${parts[2]}`;
 
-    localService.updatePricingToken(newToken);
+    await act(async () => {
+      localService.update(newToken);
+    });
 
     // After update, component should re-render to ON
-    expect(await screen.findByText('ON')).toBeDefined();
+    expect(screen.getByText('ON')).toBeDefined();
   });
 });
