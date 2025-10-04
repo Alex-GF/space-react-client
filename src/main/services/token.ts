@@ -23,7 +23,7 @@ export class TokenService {
    * Retrieves the stored pricing token's payload.
    * @returns The stored pricing token payload.
    */
-  getPricingToken() {
+  getPayload() {
     if (!this._validToken()) {
       return null;
     }
@@ -36,7 +36,7 @@ export class TokenService {
    * @param key - A key of the stored pricing token whose is going to be retrieved.
    * @return The value of the key in the stored pricing token payload.
    */
-  getFromToken(key: string) {
+  getKey(key: string) {
     if (!this._validToken()) {
       return null;
     }
@@ -48,7 +48,7 @@ export class TokenService {
    * Updates the stored pricing token with the payload of a new one.
    * @param token - Pricing token string
    */
-  updatePricingToken(token: string): void {
+  update(token: string): void {
     const parsedToken = parseJwt(token);
 
     this.tokenPayload = parsedToken;

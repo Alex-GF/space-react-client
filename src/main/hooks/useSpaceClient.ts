@@ -1,11 +1,12 @@
 import { useContext } from 'react';
 import { SpaceContext } from '../contexts/SpaceContext';
+import type { SpaceClient } from '../clients/SpaceClient';
 
 /**
  * Custom hook to access the SpaceClient instance from context.
  * Throws an error if used outside of SpaceProvider.
  */
-export function useSpaceClient() {
+export function useSpaceClient(): SpaceClient {
   const spaceContext = useContext(SpaceContext);
   if (!spaceContext) {
     throw new Error('useSpaceClient must be used within a SpaceProvider');
@@ -20,5 +21,5 @@ export function useSpaceClient() {
     );
   }
 
-  return spaceContext.client;
+  return spaceContext.client as SpaceClient;
 }

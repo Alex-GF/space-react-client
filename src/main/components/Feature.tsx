@@ -1,5 +1,6 @@
-import React, { JSX, useEffect, useMemo, useState } from 'react';
-import { usePricingToken } from '@/hooks/usePricingToken';
+import { usePricingTokenPayload } from '@/hooks/usePricingTokenPayload';
+import { useTokenService } from '@/hooks/useTokenService';
+import React, { useEffect, useMemo, useState } from 'react';
 
 interface FeatureProps {
   id: string;
@@ -7,17 +8,17 @@ interface FeatureProps {
 }
 
 // Generic wrapper for feature children
-export function On({ children }: { children: React.ReactNode }): JSX.Element {
+export function On({ children }: { children: React.ReactNode }): React.JSX.Element {
   return <>{children}</>;
 }
 
-export function Default({ children }: { children: React.ReactNode }): JSX.Element {
+export function Default({ children }: { children: React.ReactNode }): React.JSX.Element {
   return <>{children}</>;
 }
-export function Loading({ children }: { children: React.ReactNode }): JSX.Element {
+export function Loading({ children }: { children: React.ReactNode }): React.JSX.Element {
   return <>{children}</>;
 }
-export function ErrorFallback({ children }: { children: React.ReactNode }): JSX.Element {
+export function ErrorFallback({ children }: { children: React.ReactNode }): React.JSX.Element {
   return <>{children}</>;
 }
 
@@ -30,8 +31,9 @@ function getChildrenOfType(children: React.ReactNode, type: React.ElementType): 
   return match ? match.props.children : null;
 }
 
-export const Feature = ({ id, children }: FeatureProps): JSX.Element => {
-  const tokenService = usePricingToken();
+export const Feature = ({ id, children }: FeatureProps): React.JSX.Element => {
+  const tokenService = useTokenService();
+  const tokenPayload = usePricingTokenPayload();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [result, setResult] = useState<boolean | null>(null);
 
@@ -44,7 +46,7 @@ export const Feature = ({ id, children }: FeatureProps): JSX.Element => {
         setStatus('error');
         return;
       }
-      if (tokenService.getPricingToken() === null) {
+      if (tokenService.getPayload() === null) {
         setStatus('error');
         return;
       }
@@ -70,7 +72,7 @@ export const Feature = ({ id, children }: FeatureProps): JSX.Element => {
     return () => {
       unsubscribe();
     };
-  }, [id, isValidId, tokenService]);
+  }, [id, isValidId, tokenPayload, tokenService]);
 
   if (status === 'loading') {
     return <>{getChildrenOfType(children, Loading)}</>;
