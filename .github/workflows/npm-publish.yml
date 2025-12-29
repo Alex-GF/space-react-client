@@ -1,4 +1,4 @@
-name: Node.js Package
+name: publish-npm
 
 on:
   release:
@@ -36,5 +36,4 @@ jobs:
       - name: Publish to npm
         run: pnpm publish --no-git-checks --provenance --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
           NPM_CONFIG_PROVENANCE: true
