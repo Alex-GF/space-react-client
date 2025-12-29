@@ -71,7 +71,7 @@ export class TokenService {
 
   private _validToken(): boolean {
     if (!this.tokenPayload) {
-      console.warn('Token payload is not set. Please call updateLocalPricingToken first.');
+      console.warn('Token payload is not set. Please call TokenService.update first.');
       return false;
     }
 
