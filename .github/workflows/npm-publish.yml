@@ -2,27 +2,34 @@ name: Node.js Package
 on:
   release:
     types: [created]
+
 jobs:
   publish-npm:
-    name: Deployment to NPM
     runs-on: ubuntu-latest
     environment: production
+
     permissions:
       contents: read
       id-token: write
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org/
           cache: pnpm
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: Install Dependencies
-        run: npm i
-  
+        run: pnpm install --frozen-lockfile
+
       - name: Build Package
-        run: npm run build
-        
-      - name: Deploy Package (Trusted Publishing via OIDC)
+        run: pnpm run build
+
+      - name: Publish to npm (Trusted Publishing via OIDC)
         run: npm publish
