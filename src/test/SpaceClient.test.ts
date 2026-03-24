@@ -25,7 +25,18 @@ describe('SpaceClient', () => {
     // @ts-ignore
     expect(client['httpUrl']).toContain('/api/v1');
     // @ts-ignore
-    expect(client['wsUrl']).toContain('/events/pricings');
+    expect(client['wsUrl']).toBe('ws://localhost:3000');
+  });
+
+  it('Should preserve base path prefix for WebSocket path', () => {
+    const prefixedConfig: SpaceConfiguration = {
+      ...config,
+      url: 'https://oitilo.us.es/space',
+    };
+
+    const client = new SpaceClient(prefixedConfig);
+    // @ts-ignore
+    expect(client['wsUrl']).toBe('wss://oitilo.us.es/space');
   });
 
   it('Should call callback on event emit', () => {

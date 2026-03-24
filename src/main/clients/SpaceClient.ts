@@ -23,12 +23,15 @@ export class SpaceClient {
   private userId: string | null = null;
 
   constructor(config: SpaceConfiguration) {
-    this.httpUrl = config.url.endsWith('/')
-      ? config.url.slice(0, -1) + '/api/v1'
-      : config.url + '/api/v1';
-    this.wsUrl = config.url.replace(/^http/, 'ws') + '/events/pricings';
+    const normalizedUrl = config.url.endsWith('/') ? config.url.slice(0, -1) : config.url;
+    const parsedUrl = new URL(normalizedUrl);
+    const basePath = parsedUrl.pathname === '/' ? '' : parsedUrl.pathname.replace(/\/+$/, '');
+    const socketPath = `${basePath}/events`;
+
+    this.httpUrl = `${normalizedUrl}/api/v1`;
+    this.wsUrl = `${parsedUrl.protocol === 'https:' ? 'wss:' : 'ws:'}//${parsedUrl.host}${basePath}`;
     this.socketClient = io(this.wsUrl, {
-      path: '/events',
+      path: socketPath,
       transports: ['websocket'],
     });
     this.pricingSocketNamespace = this.socketClient.io.socket('/pricings');
