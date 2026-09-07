@@ -22,7 +22,7 @@ export default [
       alias({
         entries: [{ find: '@', replacement: resolve(process.cwd(), 'src/main') }],
       }),
-      dts({ respectExternal: true }),
+      dts(),
     ],
   },
 ];
