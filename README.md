@@ -1,5 +1,23 @@
 # 🚀 SPACE Client SDK for React
 
+## Release 0.4.0
+
+This minor release preserves existing public methods and adds subscription reads, contract events,
+multiorganization token claims, event deduplication and JWKS verification. Backend SDKs also
+provide pricing YAML reads, novation previews, optimistic concurrency and opt-in idempotent retries.
+Use a SPACE server advertising the required `X-Space-Capabilities`; merging server changes alone
+does not deploy them. Read `userId` through the provided helper: `sub` is opaque.
+
+### Browser and backend responsibilities
+
+`useSubscription`, `TokenService.getSubscription()` and `getUserId()` work in token-only mode.
+Have your backend generate the pricing token and deliver it to the browser; do not embed an
+organization management key. Contract mutations, consumption and novation previews belong in
+that backend. Events and `resync` require a live connection; token-only apps receive updates through
+their own backend. On reconnect, explicitly refetch the current token: events have no replay guarantee.
+Import the optional verifier from `space-react-client/verify`; verifying a token in a page does not
+replace server-side authorization. The normal entry point does not bundle the verifier.
+
 The **SPACE React SDK** provides fully-typed React/TypeScript **components, hooks, and utilities** to seamlessly integrate your web apps with SPACE.  
 
 With this SDK you can:
@@ -235,7 +253,7 @@ export function InjectTokenFromServer() {
 - **`pricing_archived`** — A pricing moved from active → archived.  
 - **`service_disabled`** — A service was disabled.  
 - **`contract_created`**, **`contract_novated`**, **`contract_deleted`**, **`contract_renewed`** — A contract of the API key's organisation was created, changed subscription, was deleted or renewed.  
-- **`resync`** — A namespace (`pricings` or `contracts`) connected or reconnected; see [Delivery guarantees](#delivery-guarantees).  
+- **`resync`** — A namespace (`pricings` or `contracts`) connected or reconnected; see [Delivery guarantees](#event-ids-and-delivery-guarantees).
 - **`error`** — Connection or processing error (including a rejected API key on the contract events namespace).  
 
 Pricing events (`pricing_*`, `service_disabled`) include the following object:  
