@@ -1,7 +1,7 @@
 {
   "name": "space-react-client",
   "type": "module",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "description": "",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -15,6 +15,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.js"
+    },
+    "./verify": {
+      "types": "./dist/verify.d.ts",
+      "import": "./dist/verify.js",
+      "require": "./dist/verify.js"
     }
   },
   "files": [
@@ -52,6 +57,7 @@
     "prettier": "^3.5.3",
     "rollup": "^4.41.1",
     "rollup-plugin-dts": "^6.2.1",
+    "socket.io": "^4.8.1",
     "tslib": "^2.8.1",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.33.0",
@@ -59,6 +65,7 @@
   },
   "dependencies": {
     "axios": "^1.9.0",
+    "jose": "^6.2.12",
     "socket.io-client": "^4.8.1",
     "tiny-emitter": "^2.1.0"
   }
