@@ -1,5 +1,23 @@
 # 🚀 SPACE Client SDK for React
 
+## Release 0.4.0
+
+This minor release preserves existing public methods and adds subscription reads, contract events,
+multiorganization token claims, event deduplication and JWKS verification. Backend SDKs also
+provide pricing YAML reads, novation previews, optimistic concurrency and opt-in idempotent retries.
+Use a SPACE server advertising the required `X-Space-Capabilities`; merging server changes alone
+does not deploy them. Read `userId` through the provided helper: `sub` is opaque.
+
+### Browser and backend responsibilities
+
+`useSubscription`, `TokenService.getSubscription()` and `getUserId()` work in token-only mode.
+Have your backend generate the pricing token and deliver it to the browser; do not embed an
+organization management key. Contract mutations, consumption and novation previews belong in
+that backend. Events and `resync` require a live connection; token-only apps receive updates through
+their own backend. On reconnect, explicitly refetch the current token: events have no replay guarantee.
+Import the optional verifier from `space-react-client/verify`; verifying a token in a page does not
+replace server-side authorization. The normal entry point does not bundle the verifier.
+
 The **SPACE React SDK** provides fully-typed React/TypeScript **components, hooks, and utilities** to seamlessly integrate your web apps with SPACE.  
 
 With this SDK you can:
@@ -163,6 +181,7 @@ export function InjectTokenFromServer() {
     - `config: SpaceConfiguration`  
       - `url: string` — SPACE instance URL  
       - `apiKey: string` — Authentication key emitted by SPACE
+      - `organizationId?: string` — Only for member user keys (`usr_...`): sent with the contract events handshake
       - `allowConnectionWithSpace: boolean` — If `false`, event listeners take no effect (default: `true`)
     - `children: React.ReactNode`  
 
@@ -175,6 +194,26 @@ export function InjectTokenFromServer() {
 
 - **`useTokenService(): TokenService`**  
   Manage Pricing Tokens in context. Available even if live connection is disabled.  
+
+- **`usePricingTokenPayload<T>(): T | null`**  
+  The decoded payload of the current Pricing Token (`null` if missing or expired). Re-renders on token updates.  
+
+- **`useSubscription(): PricingTokenSubscription | null`**  
+  The subscription carried by the current Pricing Token: `{ contractedServices, subscriptionPlans, subscriptionAddOns, contractVersion }`. Re-renders on token updates and needs no connection to SPACE, so it works in token-only mode. Returns `null` without a valid token, or when the token was issued by a SPACE version that does not include the `subscription` claim.  
+
+  ```tsx
+  import { useSubscription } from 'space-react-client';
+
+  export function CurrentPlan() {
+    const subscription = useSubscription();
+    if (!subscription) return <span>No plan information</span>;
+    return (
+      <span>
+        Plan {subscription.subscriptionPlans['acme']} (pricing {subscription.contractedServices['acme']})
+      </span>
+    );
+  }
+  ```
 
 ---
 
@@ -213,9 +252,11 @@ export function InjectTokenFromServer() {
 - **`pricing_activated`** — A pricing moved from archived → active.  
 - **`pricing_archived`** — A pricing moved from active → archived.  
 - **`service_disabled`** — A service was disabled.  
-- **`error`** — Connection or processing error.  
+- **`contract_created`**, **`contract_novated`**, **`contract_deleted`**, **`contract_renewed`** — A contract of the API key's organisation was created, changed subscription, was deleted or renewed.  
+- **`resync`** — A namespace (`pricings` or `contracts`) connected or reconnected; see [Delivery guarantees](#event-ids-and-delivery-guarantees).
+- **`error`** — Connection or processing error (including a rejected API key on the contract events namespace).  
 
-All events (except `synchronized` and `error`) include the following object:  
+Pricing events (`pricing_*`, `service_disabled`) include the following object:  
 
 ```typescript
 {
@@ -223,6 +264,67 @@ All events (except `synchronized` and `error`) include the following object:
   pricingVersion?: string;   // OPTIONAL: The version of the pricing involved
 }
 ```
+
+Contract events include:
+
+```typescript
+{
+  userId: string;
+  organizationId: string;
+  contractVersion: string | null; // version of the contract after the change; null for contract_deleted
+  services: string[];      // services affected
+}
+```
+
+> [!IMPORTANT]
+> Contract events travel over SPACE's authenticated `/contracts` namespace. The client opens it only when you register the first contract listener, and closes it when the last one is removed. The handshake carries `{ apiKey }` for an organisation key, or `{ apiKey, organizationId }` when the configuration has `organizationId` (SPACE requires it for member user keys, `usr_...`). They therefore **only work when the client connects to SPACE with an API key** (`allowConnectionWithSpace: true`).
+>
+> **Token-only apps** (`allowConnectionWithSpace: false`, the recommended production setup, since the browser holds no SPACE key) do not receive contract events. Let your backend listen to them with [`space-node-client`](https://github.com/Alex-GF/space-node-client) (`client.on('contract_novated', ...)`) and push a fresh Pricing Token to the user's sessions (or have the page refetch it after a plan change). `useSubscription()` and `<Feature>` update as soon as `tokenService.update(newToken)` runs.
+
+```tsx
+// Only with allowConnectionWithSpace: true and an API key in the browser (development, internal tools).
+spaceClient.on('contract_novated', ({ userId }) => {
+  if (userId === currentUserId) spaceClient.setUserId(userId); // reloads the Pricing Token
+});
+```
+
+```tsx
+// Token-only: your backend tells the page that the contract changed (SSE, WebSocket, polling, ...).
+const tokenService = useTokenService();
+useEffect(() => {
+  const events = new EventSource('/api/my-contract-events');
+  events.onmessage = async () => tokenService.update(await (await fetch('/api/my-pricing-token')).text());
+  return () => events.close();
+}, [tokenService]);
+```
+
+#### Event ids and delivery guarantees
+
+Pricing and contract listeners get a second argument, `SpaceEventMeta`: `code`, `eventId` (the same in every copy of one event), `occurredAt` (a `Date`: when SPACE stored the change) and `rawOccurredAt` (the string as sent). SPACE sends `eventId` and `occurredAt` from the version that advertises `contract-event-ids` in `X-Space-Capabilities`; with an older SPACE they are `undefined`.
+
+```tsx
+spaceClient.on('contract_novated', (details, meta) => {
+  console.log(meta.eventId, meta.occurredAt, details.contractVersion);
+});
+```
+
+<a id="delivery-guarantees"></a>SPACE events are hints that something changed, not a log of the changes:
+
+- **At most once per connection, no replay.** While the client is disconnected or reconnecting, events are lost, and SPACE does not resend them.
+- **Repeats are possible.** A consumer with several connections gets one copy per connection, all with the same `eventId`. The client drops a repeated `eventId` before calling your listener (it remembers the last 10,000 ids for up to 10 minutes; events without `eventId` are always delivered). Configure it with `eventDeduplication: { maxEntries, windowMs }` in the client configuration, or turn it off with `eventDeduplication: false`.
+- **No ordering.** Never order events by `eventId` (compare it for equality only), and do not compare `occurredAt` across SPACE instances. `contractVersion` is a hash, not a counter.
+
+So treat a contract event as a reason to re-read (for the browser, to reload the Pricing Token), not as the new state. After a reconnection, re-read too, because what changed meanwhile was not announced. The `resync` event (`{ namespace, reconnect }`, with `reconnect` `false` on a namespace's first connection) tells you when:
+
+```tsx
+spaceClient.on('resync', ({ namespace, reconnect }) => {
+  if (namespace === 'contracts' && reconnect && currentUserId) {
+    spaceClient.setUserId(currentUserId); // reloads the Pricing Token
+  }
+});
+```
+
+Token-only apps get the same guarantees from their backend's SDK: `space-node-client` documents them and offers the same `resync` event.
 
 ---
 
@@ -232,11 +334,63 @@ All events (except `synchronized` and `error`) include the following object:
 
 - `update(token)` — Validates & stores a pricing token.  
 - `getPayload()` — Return parsed token payload.  
+- `getSubscription()` — Return the token's `subscription` claim, or `null`.  
+- `getUserId()` — Return the userId the token was issued for (see below), or `null`.  
 - `evaluateFeature(featureId)` — Returns `true | false | null`.  
 
 Token expectations:  
 - `exp: number` — UNIX expiration.  
 - `features: Record<string, { eval: boolean; limit?: number | null; used?: number | null }>`  
+- `subscription?: { contractedServices, subscriptionPlans, subscriptionAddOns, contractVersion }` — optional; present in tokens from SPACE versions with the subscription-change API (typed as `PricingTokenPayload` / `PricingTokenSubscription`).  
+- `userId?`, `organizationId?`, `aud?`, `iss?` — optional; present in tokens from SPACE versions with per-organization userIds (capability `contract-userid-per-org`).  
+
+#### Token claims: `userId`, `organizationId`, `aud`, `iss`
+
+A userId is unique only within its organization, so SPACE versions with per-organization userIds issue tokens with these claims:
+
+| Claim | Value |
+| --- | --- |
+| `sub` | `urn:space:<organizationId>:<percent-encoded userId>`. Opaque: do not parse it. |
+| `userId` | The userId as stored in SPACE (not encoded). |
+| `organizationId` | The organization of the contract. |
+| `aud` | The organization the token is for (same value as `organizationId`). |
+| `iss` | The SPACE server: its `JWT_ISSUER`, `space` by default. |
+
+Tokens of older SPACE versions only have the bare userId in `sub`, so the new claims are optional in `PricingTokenPayload`. `tokenService.getUserId()` and `pricingTokenUserId(payload)` return the `userId` claim and fall back to `sub` only when the token has no `userId` claim (an older server); they never parse the URN. Code that used `payload.sub` as the userId should switch to them:
+
+```tsx
+import { pricingTokenUserId, usePricingTokenPayload } from 'space-react-client';
+
+const payload = usePricingTokenPayload();
+const userId = payload ? pricingTokenUserId(payload) : null;
+```
+
+The token payload is decoded as base64url UTF-8 JSON (as every JWT is encoded), so userIds outside Latin-1 come out intact.
+
+#### Verifying pricing tokens (opt-in)
+
+`tokenService.update(token)` decodes a token; it does not check its signature, and it does not need to when the token comes straight from your own backend over HTTPS. Apps that receive tokens through a channel they do not control (another frame via `postMessage`, a token kept in storage, a third-party embed) can verify them first with the public keys SPACE publishes. Verification is a separate entry point, so apps that do not import it do not bundle it (nor its dependency, [`jose`](https://github.com/panva/jose)):
+
+```tsx
+import { PricingTokenVerifier } from 'space-react-client/verify';
+
+// One verifier per SPACE, reused (it caches the keys).
+const verifier = new PricingTokenVerifier({ url: 'https://space.example.com', organizationId: 'my-org-id' });
+
+const payload = await verifier.verify(token); // throws if the token cannot be trusted
+tokenService.update(token);
+```
+
+It needs SPACE with the capability `pricing-token-jwks` (tokens signed with ES256, public keys at `GET {url}/api/v1/.well-known/jwks.json`, no API key; SPACE's CORS settings, `ALLOWED_ORIGINS`, must allow your origin). It checks:
+
+- the ES256 signature by a key of the JWKS, chosen by the token's `kid`; any other `alg` (`HS256`, `none`, ...) is rejected, and so is a token with a `jwk`, `jku`, `x5u` or `x5c` header;
+- `exp`, required (`clockToleranceSeconds`, default 0);
+- `iss` (`issuer`, default `space`, the `JWT_ISSUER` of your SPACE);
+- `aud` and `organizationId`: the expected organization, required in the options or per call (`verifier.verify(token, { organizationId })`).
+
+The keys are cached for the `max-age` of the JWKS response (5 minutes from SPACE) and fetched again, at most once per `refetchCooldownMs` (30 s), when a token names an unknown `kid`. Errors: `PricingTokenSignatureError`, `PricingTokenExpiredError`, `PricingTokenAudienceError`, `PricingTokenIssuerError`, `PricingTokenUnknownKeyError`, and `PricingTokenVerificationError` (their base class) with `code` `PRICING_TOKEN_INVALID` or `PRICING_TOKEN_JWKS_UNAVAILABLE`; `SpaceFeatureUnsupportedError` (`capability: 'pricing-token-jwks'`) when SPACE does not publish its keys.
+
+A check in the browser does not replace the checks of your backend: code running in the page can be changed by whoever controls the page. Authorize requests on the server (for example with `space-node-client`'s `verifyPricingToken`).
 
 ---
 
@@ -245,6 +399,7 @@ Token expectations:
 - **Do not expose SPACE API keys in production.**  
   Instead, issue Pricing Tokens from your backend and deliver them to the client.  
 - Tokens are validated client-side with the `exp` claim. Rotate or shorten TTLs as needed.  
+- To check the signature of a token in the browser, use the opt-in `space-react-client/verify` entry point (see [Verifying pricing tokens](#verifying-pricing-tokens-opt-in)).  
 
 ---
 

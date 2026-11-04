@@ -1,28 +1,36 @@
-name: Node.js Package
+name: Publish Package
+
 on:
   release:
-    types: [created]
+    types: [published]
+
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
+
 jobs:
   publish-npm:
-    name: Deployment to NPM
     runs-on: ubuntu-latest
     environment: production
+
     permissions:
       contents: read
       id-token: write
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 24
-          registry-url: https://registry.npmjs.org/
-          cache: npm
-
+          registry-url: 'https://registry.npmjs.org/'
       - name: Install Dependencies
-        run: npm i
-  
+        run: corepack enable && pnpm install --frozen-lockfile
+
       - name: Build Package
-        run: npm run build
-        
-      - name: Deploy Package (Trusted Publishing via OIDC)
+        run: pnpm test && pnpm exec tsc --noEmit && pnpm build
+
+      - name: Publish to npm
         run: npm publish
