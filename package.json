@@ -15,6 +15,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.js"
+    },
+    "./verify": {
+      "types": "./dist/verify.d.ts",
+      "import": "./dist/verify.js",
+      "require": "./dist/verify.js"
     }
   },
   "files": [
@@ -60,6 +65,7 @@
   },
   "dependencies": {
     "axios": "^1.9.0",
+    "jose": "^6.2.12",
     "socket.io-client": "^4.8.1",
     "tiny-emitter": "^2.1.0"
   }
